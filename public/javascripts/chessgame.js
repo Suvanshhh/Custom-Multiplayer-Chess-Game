@@ -1,6 +1,13 @@
 const socket = io();
 const chess = new Chess();
 const boardElement = document.querySelector(".chessboard");
+const playNowBtn = document.getElementById("playNowBtn");
+const restartBtn = document.getElementById("restartBtn");
+const gameOverOverlay = document.getElementById("gameOver");
+const loadingSpinner = document.getElementById("loadingSpinner");
+const player1Name = document.getElementById("player1Name");
+const player2Name = document.getElementById("player2Name");
+const moveHistory = document.getElementById("moveHistory");
 
 let draggedPiece = null;
 let sourceSquare = null;
@@ -73,6 +80,7 @@ const renderBoard = () => {
   }
 };
 
+// Handle move logic
 const handleMove = (source, target) => {
   const move = {
     from: `${String.fromCharCode(97 + source.col)}${8 - source.row}`,
@@ -82,11 +90,21 @@ const handleMove = (source, target) => {
 
   if (chess.move(move)) {
     renderBoard();
+    updateMoveHistory(move);
     socket.emit("move", move); // Send the move to the server
+    checkGameStatus();
   } else {
     console.log("Invalid move");
   }
 };
+
+// Update move history
+const updateMoveHistory = (move) => {
+  const moveText = `${move.from.toUpperCase()} to ${move.to.toUpperCase()}`;
+  const listItem = document.createElement("li");
+  listItem.textContent = moveText;
+  moveHistory.appendChild(listItem);
+}
 
 // Get the Unicode character for a chess piece
 const getPieceUnicode = (square) => {
@@ -108,56 +126,83 @@ const getPieceUnicode = (square) => {
   return unicodePieces[square.type] || "";
 };
 
+// Check game status for game over
+const checkGameStatus = () => {
+  if (chess.game_over()) {
+    gameOverOverlay.textContent = chess.in_checkmate() ? `${playerRole === 'w' ? 'Black' : 'White'} Wins!` :
+                                 chess.in_stalemate() ? 'Draw by Stalemate!' :
+                                 chess.in_threefold_repetition() ? 'Draw by Threefold Repetition!' :
+                                 chess.insufficient_material() ? 'Draw by Insufficient Material!' :
+                                 'Game Over';
+    gameOverOverlay.classList.add("show");
+    restartBtn.classList.remove("hidden");
+  }
+};
+
+// Event Listeners for Buttons
+playNowBtn.addEventListener("click", () => {
+  // Refresh the page or reset the game state
+  window.location.reload();
+});
+
+restartBtn.addEventListener("click", () => {
+  socket.emit("restartGame");
+  window.location.reload();
+});
+
 // Listen for moves from the server
 socket.on("move", (move) => {
-  chess.move(move); // Update the local chess state
-  renderBoard(); // Re-render the board
+  chess.move(move);
+  renderBoard();
+  updateMoveHistory(move);
+  checkGameStatus();
 });
 
 // Listen for player role assignment
 socket.on("playerRole", function(role) {
   playerRole = role;
-  renderBoard(); // Ensure board updates based on player role
+  updatePlayerNames();
+  renderBoard();
 });
 
 // Listen for spectator role assignment
 socket.on("spectatorRole", function() {
   playerRole = null;
-  renderBoard(); // Ensure board updates for spectators
+  updatePlayerNames();
+  renderBoard();
 });
 
 // Listen for board state from the server
 socket.on("boardState", function(fen) {
-  chess.load(fen); // Load the board state from FEN
-  renderBoard(); // Re-render the board
+  chess.load(fen);
+  renderBoard();
 });
+
+// Listen for game over from server (if implemented)
+socket.on("gameOver", function(message) {
+  gameOverOverlay.textContent = message;
+  gameOverOverlay.classList.add("show");
+  restartBtn.classList.remove("hidden");
+});
+
+// Listen for restart event
+socket.on("restart", function() {
+  window.location.reload();
+});
+
+// Update player names based on roles
+const updatePlayerNames = () => {
+  if (playerRole === 'w') {
+    player1Name.textContent = "You";
+    player2Name.textContent = "Opponent";
+  } else if (playerRole === 'b') {
+    player1Name.textContent = "Opponent";
+    player2Name.textContent = "You";
+  } else {
+    player1Name.textContent = "Player 1";
+    player2Name.textContent = "Player 2";
+  }
+};
 
 // Initialize the board
 renderBoard();
-
-
-// Code for understanding how Socket.io handles connection event
-
-// const socket = io();
-// socket.emit("churan")
-// socket.on("churan papdi", function(){
-//     console.log("churan papdi recieved");
-// })
-
-//  Code explanation:
-// As soon as this line runs an automatic request is sent to the backend and the user is connected to the server or
-// // io.on("connection", function(uniquesocket){
-//     console.log("connected");
-// })
-
-// And connected is printed.
-// The socket.emit("churan ") line runs and it sends churan to the frontend which is catched by function: uniquesocket.on("churan", function () {
-//     io.emit("churan papdi");
-// });
-// This is the function that is called when the server receives the churan request from the frontend
-// And churan papdi is printed at backend.
-// The server then sends churan papdi to the frontend which is catched by the function:
-// socket.on("churan papdi", function(){
-//     console.log("churan papdi recieved");
-// });
-// And churan papdi recieved is printed at frontend.

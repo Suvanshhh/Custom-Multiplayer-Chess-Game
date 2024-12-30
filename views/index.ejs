@@ -3,14 +3,83 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chess Game</title>
+    <title>Chess Zone</title>
+    <link
+      rel="icon"
+      href="https://i.postimg.cc/vBxP6BC1/premium-photo-1670183859029-99a0a2c1912b.avif"
+      type="image/x-icon"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <div class="w-full h-screen flex items-center justify-center bg-zinc-900">
-      <div class="chessboard w-96 h-96 bg-red-400"></div>
+  <body class="bg-gradient-to-br from-gray-800 to-gray-900 text-white">
+    <div class="flex flex-col items-center justify-center min-h-screen p-4">
+      <!-- Header -->
+      <header class="mb-8 text-4xl font-bold">Multiplayer Chess Game</header>
+
+      <!-- Player Info -->
+      <div class="w-full max-w-4xl flex justify-between mb-4">
+        <div id="player1" class="flex flex-col items-center">
+          <span class="mb-2">Player 1 (White)</span>
+          <span id="player1Name" class="text-lg">Waiting...</span>
+        </div>
+        <div id="player2" class="flex flex-col items-center">
+          <span class="mb-2">Player 2 (Black)</span>
+          <span id="player2Name" class="text-lg">Waiting...</span>
+        </div>
+      </div>
+
+      <!-- Chessboard and Controls -->
+      <div class="flex flex-col items-center">
+        <!-- Chessboard Container -->
+        <div class="relative">
+          <div
+            class="chessboard grid grid-cols-8 grid-rows-8 w-96 h-96 bg-red-400 border-4 border-gray-700 shadow-lg"
+          ></div>
+
+          <!-- Game Over Notification -->
+          <div
+            id="gameOver"
+            class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-white text-2xl font-bold rounded-lg hidden"
+          >
+            Game Over
+          </div>
+
+          <!-- Loading Spinner -->
+          <div
+            id="loadingSpinner"
+            class="absolute inset-0 flex items-center justify-center text-4xl hidden"
+          >
+            ⏳
+          </div>
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="mt-6 flex space-x-4">
+          <button
+            id="playNowBtn"
+            class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white font-semibold"
+          >
+            Play Now
+          </button>
+          <button
+            id="restartBtn"
+            class="px-4 py-2 bg-green-500 hover:bg-green-600 rounded text-white font-semibold hidden"
+          >
+            Restart
+          </button>
+        </div>
+      </div>
+
+      <!-- Move History (Optional) -->
+      <div class="mt-8 w-full max-w-4xl">
+        <h2 class="text-2xl mb-4">Move History</h2>
+        <ul id="moveHistory" class="list-decimal list-inside space-y-1">
+          <!-- Moves will be appended here -->
+        </ul>
+      </div>
     </div>
 
+    <!-- Socket.IO and Chess.js -->
     <script
       src="https://cdn.socket.io/4.8.1/socket.io.min.js"
       integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+"
@@ -23,159 +92,89 @@
       referrerpolicy="no-referrer"
     ></script>
     <script src="/javascripts/chessgame.js"></script>
+
     <style>
-      /* Basic layout of the chessboard */
+      /* Chessboard Styling */
       .chessboard {
         display: grid;
-        grid-template-columns: repeat(8, minmax(0, 1fr));
-        grid-template-rows: repeat(8, minmax(0, 1fr));
+        grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(8, 1fr);
         width: 400px;
         height: 400px;
-        transform: rotate(0deg);
-        border: 2px solid #333; /* Adding a border around the chessboard */
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* Adding shadow for a 3D effect */
+        border: 2px solid #333;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        position: relative;
       }
 
-      /* Adding a gradient background for the page */
-      body {
-        background: linear-gradient(135deg, #2d3748, #1a202c);
-        font-family: "Arial", sans-serif;
-      }
-
-      /* Styling for the game container */
-      .w-full {
-        background-color: #2d3748;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-      }
-
-      /* Styling for chessboard squares */
+      /* Square Styling */
       .square {
         display: flex;
         align-items: center;
         justify-content: center;
         transition: background-color 0.3s ease; /* Smooth transition for square colors */
         cursor: pointer; /* Cursor pointer on hover */
+        width: 100%; /* Take full width of the grid cell */
+        height: 100%; /* Take full height of the grid cell */
+        box-sizing: border-box; /* Include padding and border in the element's total size */
       }
 
-      /* Light square styling */
       .square.light {
         background-color: #f0d9b5;
       }
 
-      /* Dark square styling */
       .square.dark {
         background-color: #b58863;
       }
 
-      /* Hover effect for chessboard squares */
       .square:hover {
-        background-color: #d1b38b; /* Slightly darker shade for hover effect */
+        background-color: #d1b38b;
       }
 
-      /* Piece styling for both white and black pieces */
+      /* Piece Styling */
+      .piece {
+        font-size: 36px;
+        cursor: grab;
+        user-select: none;
+        transition: transform 0.1s ease-in-out;
+      }
+
       .piece.white {
-        color: white;
-        filter: drop-shadow(
-          0 0 3px rgba(0, 0, 0, 0.8)
-        ); /* Stronger shadow for white pieces */
-        transition: transform 0.1s ease-in-out; /* Smooth piece movement */
+        color: #ffffff; /* White color */
+        filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
       }
 
+      /* Styling for black pieces */
       .piece.black {
-        color: black;
-        filter: drop-shadow(
-          0 0 3px rgba(255, 255, 255, 0.8)
-        ); /* White shadow for black pieces */
-        transition: transform 0.1s ease-in-out; /* Smooth piece movement */
+        color: #000000; /* Black color */
+        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
       }
 
-      /* Flipped board for black player */
+      .piece:active {
+        cursor: grabbing;
+        transform: scale(1.2);
+      }
+
+      /* Flipped Board */
       .flipped {
         transform: rotate(180deg);
       }
 
-      /* Styling for draggable pieces */
-      .piece {
-        font-size: 36px;
-        cursor: grab;
-        user-select: none; /* Prevent text selection while dragging */
-        transition: transform 0.1s ease-in-out;
-      }
-
-      .piece:active {
-        cursor: grabbing; /* Change cursor when dragging */
-        transform: scale(1.2); /* Slightly enlarge piece while dragging */
-      }
-
-      /* Dragging piece with opacity */
-      .dragging {
-        opacity: 0.6; /* Slight transparency while dragging */
-      }
-
-      /* Styling for game over notification */
-      .game-over {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        padding: 20px;
-        background-color: rgba(0, 0, 0, 0.7);
-        color: white;
-        font-size: 24px;
-        font-weight: bold;
-        border-radius: 10px;
-        text-align: center;
-        display: none; /* Hidden by default */
-      }
-
-      /* Show the game over notification when the game ends */
-      .game-over.show {
-        display: block;
-      }
-
-      /* Styling for players' roles (optional: display player role in top corner) */
-      .player-role {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        color: white;
-        font-size: 18px;
-        font-weight: bold;
-        padding: 10px;
-        background-color: rgba(0, 0, 0, 0.5);
-        border-radius: 5px;
-      }
-
-      /* Adding a loading spinner while waiting for the game to start */
-      .loading-spinner {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 24px;
-        color: white;
-      }
-
       .chessboard.flipped .piece {
-        transition: transform 0.5s ease-in-out; /* Smooth spin effect */
+        transition: transform 0.5s ease-in-out;
         transform: rotate(180deg);
       }
 
-      .chessboard:not(.flipped) .piece {
-        transition: transform 0.5s ease-in-out;
-        transform: rotate(0deg);
+      /* Game Over Notification */
+      .game-over.show {
+        display: flex;
       }
 
-      /* Spinner animation */
+      /* Loading Spinner */
       .loading-spinner::before {
         content: "⏳";
         animation: spin 1s infinite linear;
       }
 
-      /* Spinner animation keyframes */
       @keyframes spin {
         0% {
           transform: rotate(0deg);
