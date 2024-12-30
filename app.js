@@ -70,7 +70,10 @@ io.on("connection", function (uniquesocket) {
         if (chess.game_over()) {
           let message = "";
           if (chess.in_checkmate()) {
-            message = chess.turn() === "w" ? "Black wins by checkmate!" : "White wins by checkmate!";
+            message =
+              chess.turn() === "w"
+                ? "Black wins by checkmate!"
+                : "White wins by checkmate!";
           } else if (chess.in_stalemate()) {
             message = "Game ended in a stalemate!";
           } else if (chess.in_threefold_repetition()) {
@@ -93,7 +96,10 @@ io.on("connection", function (uniquesocket) {
   });
 
   uniquesocket.on("restartGame", () => {
-    if (uniquesocket.id === players.white || uniquesocket.id === players.black) {
+    if (
+      uniquesocket.id === players.white ||
+      uniquesocket.id === players.black
+    ) {
       chess.reset();
       io.emit("boardState", chess.fen());
       io.emit("restart");
@@ -103,7 +109,8 @@ io.on("connection", function (uniquesocket) {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, function () {
-  console.log(`Listening on port ${PORT}`);
+const port = process.env.PORT || 3000;
+
+app.listen(port, () => {
+  console.log(`Server is listening on port ${port}`);
 });
