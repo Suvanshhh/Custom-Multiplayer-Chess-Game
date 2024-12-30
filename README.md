@@ -6,6 +6,6 @@
 
 <h2>Project Screenshots:</h2>
 
-<img src="https://i.postimg.cc/jSMQQFn0/custom-multiplayer-chess-game-production-up-railway-app.png" alt="project-screenshot" width="1000" height="750/">
+<img src="https://i.postimg.cc/jSMQQFn0/custom-multiplayer-chess-game-production-up-railway-app.png" alt="project-screenshot" width="400" height="400/">
 
-<img src="https://i.postimg.cc/595zSRD7/custom-multiplayer-chess-game-production-up-railway-app-2.png" alt="project-screenshot" width="1000" height="750/">
+<img src="https://i.postimg.cc/595zSRD7/custom-multiplayer-chess-game-production-up-railway-app-2.png" alt="project-screenshot" width="400" height="400/">
