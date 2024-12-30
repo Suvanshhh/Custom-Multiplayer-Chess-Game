@@ -6,7 +6,12 @@ const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const io = socket(server);
+const io = socket(server, {
+  cors: {
+    origin: "https://custom-multiplayer-chess-game-production.up.railway.app", // Update to your deployed URL
+    methods: ["GET", "POST"],
+  },
+});
 
 let chess = new Chess();
 let players = {};
@@ -35,11 +40,7 @@ io.on("connection", function (uniquesocket) {
     console.log(`Assigned spectator to ${uniquesocket.id}`);
   }
 
-  // Send the current board state to the newly connected client
   uniquesocket.emit("boardState", chess.fen());
-
-  // Send player names (optional: can be enhanced with actual usernames)
-  // You can implement a way to set and track player names if desired
 
   uniquesocket.on("disconnect", function () {
     console.log("A user disconnected: " + uniquesocket.id);
@@ -63,10 +64,9 @@ io.on("connection", function (uniquesocket) {
       const result = chess.move(move);
       if (result) {
         currentPlayer = chess.turn();
-        io.emit("move", move); // Emit the move to all players
-        io.emit("boardState", chess.fen()); // Emit the updated board state
+        io.emit("move", move);
+        io.emit("boardState", chess.fen());
 
-        // Check for game over and notify clients
         if (chess.game_over()) {
           let message = "";
           if (chess.in_checkmate()) {
@@ -103,7 +103,7 @@ io.on("connection", function (uniquesocket) {
       chess.reset();
       io.emit("boardState", chess.fen());
       io.emit("restart");
-      io.emit("moveHistoryClear"); // Optional: clear move history on clients
+      io.emit("moveHistoryClear");
       console.log("Game restarted by " + uniquesocket.id);
     }
   });
@@ -111,10 +111,6 @@ io.on("connection", function (uniquesocket) {
 
 const PORT = process.env.PORT || 3000;
 
-app.get('/', (req, res) => {
-  res.send('Chess Game is running');
-});
-
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Listening on *:${PORT}`);
 });
