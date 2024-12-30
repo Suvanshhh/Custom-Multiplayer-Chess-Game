@@ -109,8 +109,12 @@ io.on("connection", function (uniquesocket) {
   });
 });
 
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
-app.listen(port, () => {
-  console.log(`Server is listening on port ${port}`);
+app.get('/', (req, res) => {
+  res.send('Chess Game is running');
+});
+
+app.listen(PORT, () => {
+  console.log(`Listening on *:${PORT}`);
 });
