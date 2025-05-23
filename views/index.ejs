@@ -20,7 +20,9 @@
         Instructions:
         <ol>
           <li>1. Refresh the website.</li>
-          <li>2. Click on the "restart" button if the pieces are not in place.</li>
+          <li>
+            2. Click on the "restart" button if the pieces are not in place.
+          </li>
           <li>3. Wait for the opponent to join from a different browser.</li>
           <li>4. Click on the "Play" button to start the game.</li>
         </ol>
@@ -41,6 +43,8 @@
       <!-- Chessboard and Controls -->
       <div class="flex flex-col items-center">
         <!-- Chessboard Container -->
+        <div id="turnIndicator" class="turn-indicator">White's Turn</div>
+
         <div class="relative">
           <div
             class="chessboard grid grid-cols-8 grid-rows-8 w-96 h-96 bg-red-400 border-4 border-gray-700 shadow-lg"
@@ -80,6 +84,18 @@
         </div>
       </div>
 
+      <!-- Captured Pieces Display -->
+      <div class="mt-6 w-full max-w-4xl flex justify-between">
+        <div>
+          <h3 class="font-semibold mb-2">White's Pavalion</h3>
+          <div id="whiteDeadPieces" class="flex space-x-2 min-h-[40px]"></div>
+        </div>
+        <div>
+          <h3 class="font-semibold mb-2">Black's Pavallion:</h3>
+          <div id="blackDeadPieces" class="flex space-x-2 min-h-[40px]"></div>
+        </div>
+      </div>
+
       <!-- Move History (Optional) -->
       <div class="mt-8 w-full max-w-4xl">
         <h2 class="text-2xl mb-4">Move History</h2>
@@ -115,6 +131,31 @@
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         position: relative;
       }
+      .turn-indicator {
+        font-size: 1.3em;
+        font-weight: bold;
+        margin-bottom: 10px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #fff 50%, #222 50%);
+        color: #333;
+        text-align: center;
+        width: 220px;
+        margin-left: auto;
+        margin-right: auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13);
+        border: 2px solid #444;
+      }
+      .turn-indicator.white {
+        background: linear-gradient(90deg, #fff 80%, #eee 100%);
+        color: #222;
+        border-color: #bbb;
+      }
+      .turn-indicator.black {
+        background: linear-gradient(90deg, #222 80%, #444 100%);
+        color: #fff;
+        border-color: #222;
+      }
 
       /* Square Styling */
       .square {
@@ -147,17 +188,49 @@
         user-select: none;
         transition: transform 0.1s ease-in-out;
       }
+      .dead-piece {
+        font-size: 32px;
+        margin-right: 4px;
+      }
 
       .piece.white {
-        color: #ffffff; /* White color */
-        filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+        color: #ffffff;
+        filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.3))
+          drop-shadow(0 0 2px rgba(255, 255, 255, 0.3))
+          drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
+      }
+      .piece.pawn {
+        border-radius: 6px;
+        padding: 2px 0;
       }
 
-      /* Styling for black pieces */
-      .piece.black {
-        color: #000000; /* Black color */
-        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.8));
+      .piece.white.pawn {
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 2px 6px rgba(180, 180, 180, 0.2);
+        border: 2px solid white;
       }
+
+      .piece.black.pawn {
+        background: rgba(80, 80, 80, 0.1);
+        box-shadow: 0 2px 6px rgba(50, 50, 50, 0.18);
+        border: 2px solid rgb(55, 55, 55);
+      }
+
+      /* .piece.white.pawn {
+        box-shadow: 0 0 16px 4px rgba(255, 255, 255, 0.8), 0 0 0 3px #bbb;
+        background: #fff;
+        border-radius: 50%;
+      } */
+
+      .piece.black {
+        color: #000000;
+        filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.3))
+          drop-shadow(0 0 2px rgba(0, 0, 0, 0.2))
+          drop-shadow(0 0 4px rgba(0, 0, 0, 0.2));
+      }
+      /* .piece.black.pawn {
+        box-shadow: 0 0 16px 4px rgba(0, 0, 0, 0.8), 0 0 0 3px #444;
+      } */
 
       .piece:active {
         cursor: grabbing;
